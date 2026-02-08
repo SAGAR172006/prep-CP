@@ -2,17 +2,26 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: [
-      'res.cloudinary.com', // Cloudinary
-      'lh3.googleusercontent.com', // Google OAuth
-      'avatars.githubusercontent.com', // GitHub OAuth
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
     ],
-    formats: ['image/avif', 'image/webp'],
   },
-  // Compiler options for better performance
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
   },
-}
+  webpack: (config) => {
+    config.resolve.fallback = { fs: false, net: false, tls: false };
+    return config;
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

@@ -1,22 +1,31 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type { Metadata } from 'next';
+import './globals.css';
+import { Providers } from '@/components/shared/Providers';
 
 export const metadata: Metadata = {
-  title: 'Prep CP - Free Coding Practice Platform',
-  description: 'Gamified coding practice platform with AI assistance, built entirely on free-tier services',
-  keywords: ['coding', 'practice', 'interview prep', 'competitive programming', 'free'],
-}
+  title: 'Prep-CP - Gamified Coding Practice Platform',
+  description: 'Master coding interviews with gamified practice, AI assistance, and competitive programming',
+  keywords: ['coding', 'interview prep', 'algorithms', 'data structures', 'competitive programming'],
+  authors: [{ name: 'Prep-CP Team' }],
+  openGraph: {
+    title: 'Prep-CP - Gamified Coding Practice Platform',
+    description: 'Master coding interviews with gamified practice',
+    type: 'website',
+  },
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
-  )
+  );
 }
