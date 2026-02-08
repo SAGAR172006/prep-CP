@@ -9,12 +9,6 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
   },
-  // Enable experimental features for better performance
-  experimental: {
-    optimizeCss: true,
-  },
-  // Optimize for production
-  swcMinify: true,
   // Compiler options for better performance
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
