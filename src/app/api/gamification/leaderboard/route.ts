@@ -27,10 +27,12 @@ export async function GET(request: NextRequest) {
     const scores: Record<string, number> = {};
     
     for (let i = 0; i < leaderboardData.length; i += 2) {
-      const id = leaderboardData[i];
-      const score = parseInt(leaderboardData[i + 1] || '0');
-      userIds.push(id);
-      scores[id] = score;
+      const id = String(leaderboardData[i] || '');
+      const score = parseInt(String(leaderboardData[i + 1] || '0'));
+      if (id) {
+        userIds.push(id);
+        scores[id] = score;
+      }
     }
     
     // Fetch user details from database

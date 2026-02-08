@@ -56,7 +56,7 @@ export function CodeEditor({ language, value, onChange, onLanguageChange }: Code
     };
   }, []);
 
-  const handleEditorDidMount = (editor: any) => {
+  const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
 
     // Disable paste commands in Monaco

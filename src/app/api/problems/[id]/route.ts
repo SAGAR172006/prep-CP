@@ -46,13 +46,14 @@ export async function GET(
     
     // Filter out hidden test cases
     const testCases = Array.isArray(problem.testCases) 
-      ? problem.testCases.filter((tc: { isHidden?: boolean }) => !tc.isHidden)
+      ? problem.testCases.filter((tc: unknown) => {
+          const testCase = tc as { isHidden?: boolean };
+          return !testCase.isHidden;
+        })
       : [];
     
     // Get user's submissions if authenticated
-    let userSubmissions = [];
-    if (userId) {
-      userSubmissions = await prisma.submission.findMany({
+    const userSubmissions = userId ? await prisma.submission.findMany({
         where: {
           userId,
           problemId: id,
@@ -74,8 +75,7 @@ export async function GET(
           submittedAt: 'desc',
         },
         take: 10,
-      });
-    }
+      }) : [];
     
     return NextResponse.json({
       success: true,

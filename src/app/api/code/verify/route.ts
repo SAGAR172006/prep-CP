@@ -78,10 +78,13 @@ export async function POST(request: NextRequest) {
     
     // Verify code against all test cases
     const testCases = Array.isArray(problem.testCases) 
-      ? problem.testCases.map((tc: { input: string; expectedOutput: string }) => ({
-          input: tc.input,
-          expectedOutput: tc.expectedOutput,
-        }))
+      ? problem.testCases.map((tc: unknown) => {
+          const testCase = tc as { input: string; expectedOutput: string };
+          return {
+            input: testCase.input,
+            expectedOutput: testCase.expectedOutput,
+          };
+        })
       : [];
     
     const verification = await verifyTestCases(code, language, testCases);
@@ -114,10 +117,14 @@ export async function POST(request: NextRequest) {
     }
     
     // Get avg execution time and memory
-    const avgExecutionTime = verification.results.reduce((sum, r) => 
-      sum + (r.executionTime || 0), 0) / verification.results.length;
-    const avgMemory = verification.results.reduce((sum, r) => 
-      sum + (r.memory || 0), 0) / verification.results.length;
+    const avgExecutionTime = verification.results.reduce((sum, r) => {
+      const result = r as { executionTime?: number };
+      return sum + (result.executionTime || 0);
+    }, 0) / verification.results.length;
+    const avgMemory = verification.results.reduce((sum, r) => {
+      const result = r as { memory?: number };
+      return sum + (result.memory || 0);
+    }, 0) / verification.results.length;
     
     // Create submission record
     const submission = await prisma.submission.create({
