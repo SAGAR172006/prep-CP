@@ -8,6 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 
+// OAuth login handlers
+const handleGoogleLogin = () => {
+  window.location.href = '/api/auth/signin?provider=google';
+};
+
+const handleGithubLogin = () => {
+  window.location.href = '/api/auth/signin?provider=github';
+};
+
 export function SignupForm() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -52,7 +61,8 @@ export function SignupForm() {
       } else {
         router.push('/login?signup=success');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Signup error:', error);
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -119,6 +129,34 @@ export function SignupForm() {
             {isLoading ? 'Creating account...' : 'Sign Up'}
           </Button>
         </form>
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleLogin}
+          >
+            <FaGoogle className="mr-2" />
+            Sign up with Google
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGithubLogin}
+          >
+            <FaGithub className="mr-2" />
+            Sign up with GitHub
+          </Button>
+        </div>
       </CardContent>
       <CardFooter className="flex justify-center">
         <p className="text-sm text-muted-foreground">

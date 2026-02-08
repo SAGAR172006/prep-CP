@@ -33,7 +33,8 @@ export function LoginForm() {
       } else {
         router.push('/home');
       }
-    } catch (err) {
+    } catch (error) {
+      console.error('Login error:', error);
       setError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);

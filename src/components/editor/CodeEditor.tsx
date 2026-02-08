@@ -13,6 +13,7 @@ interface CodeEditorProps {
 }
 
 export function CodeEditor({ language, value, onChange, onLanguageChange }: CodeEditorProps) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editorRef = useRef<any>(null);
   const [theme, setTheme] = useState('vs-dark');
 
@@ -56,6 +57,7 @@ export function CodeEditor({ language, value, onChange, onLanguageChange }: Code
     };
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
 
