@@ -21,7 +21,7 @@ A comprehensive full-stack gamified coding practice platform similar to HackerRa
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework:** Next.js 15 with TypeScript
+- **Framework:** Next.js 16 with TypeScript
 - **Styling:** Tailwind CSS + Framer Motion (60-144 FPS animations)
 - **Code Editor:** Monaco Editor
 - **State Management:** Zustand
