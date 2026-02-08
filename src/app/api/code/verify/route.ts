@@ -89,8 +89,8 @@ export async function POST(request: NextRequest) {
     
     const verification = await verifyTestCases(code, language, testCases);
     
-    // Anti-cheat: Check if solved too quickly
-    const isFlaggedFast = timeSpent > 0 && timeSpent < problem.minSolveTime / 2;
+    // Anti-cheat: Check if solved too quickly (less than 30% of minimum expected time)
+    const isFlaggedFast = timeSpent > 0 && timeSpent < problem.minSolveTime * 0.3;
     
     // Calculate status
     let status = 'Wrong Answer';

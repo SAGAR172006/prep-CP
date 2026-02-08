@@ -152,7 +152,8 @@ export function getCodeTemplate(language: string, problemTitle: string): string 
     javascript: `// ${problemTitle}
 function solution(input) {
   // Your code here
-  return output;
+  // TODO: Implement solution
+  return ""; // Replace with your output
 }
 
 // Test your solution
@@ -162,7 +163,8 @@ console.log(solution(testInput));`,
     python: `# ${problemTitle}
 def solution(input):
     # Your code here
-    return output
+    # TODO: Implement solution
+    return ""  # Replace with your output
 
 # Test your solution
 test_input = ""
@@ -172,7 +174,8 @@ print(solution(test_input))`,
 public class Solution {
     public static String solution(String input) {
         // Your code here
-        return output;
+        // TODO: Implement solution
+        return "";  // Replace with your output
     }
     
     public static void main(String[] args) {
@@ -188,7 +191,8 @@ using namespace std;
 
 string solution(string input) {
     // Your code here
-    return output;
+    // TODO: Implement solution
+    return "";  // Replace with your output
 }
 
 int main() {
@@ -203,6 +207,8 @@ int main() {
 
 void solution(char* input, char* output) {
     // Your code here
+    // TODO: Implement solution
+    strcpy(output, "");  // Replace with your output
 }
 
 int main() {
@@ -220,7 +226,8 @@ import "fmt"
 
 func solution(input string) string {
     // Your code here
-    return output
+    // TODO: Implement solution
+    return ""  // Replace with your output
 }
 
 func main() {
