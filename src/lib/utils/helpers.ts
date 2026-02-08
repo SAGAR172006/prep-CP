@@ -113,6 +113,7 @@ export function getRelativeTime(date: Date | string): string {
   return formatDate(d);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
@@ -124,6 +125,7 @@ export function debounce<T extends (...args: any[]) => any>(
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
   limit: number

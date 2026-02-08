@@ -73,11 +73,12 @@ export async function executeCode(
       executionTime: result.run.time || 0,
       memory: result.run.memory || 0,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Code execution error:', error);
+    const err = error as { response?: { data?: { message?: string } } };
     return {
       success: false,
-      error: error.response?.data?.message || 'Failed to execute code',
+      error: err.response?.data?.message || 'Failed to execute code',
     };
   }
 }
