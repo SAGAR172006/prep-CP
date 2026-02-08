@@ -1,0 +1,363 @@
+// Prisma Schema for Gamified Coding Practice Platform
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model - Core user data and gamification
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  password      String?  // Nullable for OAuth users
+  
+  // Profile
+  avatar        String?
+  banner        String?
+  bio           String?
+  location      String?
+  
+  // OAuth
+  googleId      String?  @unique
+  githubId      String?  @unique
+  
+  // Gamification
+  points        Int      @default(0)
+  league        String   @default("Bronze") // Bronze, Silver, Gold, Diamond, Master, Conqueror
+  subLeague     String   @default("V") // V, IV, III, II, I
+  leagueCP      String   @default("Bronze") // Competitive Programming League
+  subLeagueCP   String   @default("V")
+  
+  // Streaks
+  loginStreak   Int      @default(0)
+  solveStreak   Int      @default(0)
+  lastLogin     DateTime?
+  lastSolve     DateTime?
+  streakFreezes Int      @default(0) // Pro only
+  
+  // Subscription
+  isPro         Boolean  @default(false)
+  proType       String?  // "monthly" | "annual"
+  proStartDate  DateTime?
+  proEndDate    DateTime?
+  
+  // Stats
+  problemsSolved Int     @default(0)
+  totalTime     Int      @default(0) // seconds
+  accuracy      Float    @default(0.0)
+  
+  // Social
+  friendLimit   Int      @default(20) // 20 free, 100 Pro
+  
+  // AI Bot
+  aiQueriesUsed Int      @default(0)
+  aiQueryLimit  Int      @default(20) // 20 free, 100 Pro
+  
+  // Daily Limits
+  problemsToday Int      @default(0)
+  problemLimit  Int      @default(20) // 20 free, unlimited Pro
+  lastReset     DateTime @default(now())
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  submissions   Submission[]
+  friendships   Friendship[] @relation("UserFriendships")
+  friendOf      Friendship[] @relation("FriendOfUser")
+  challenges    Challenge[]  @relation("ChallengeInitiator")
+  challengedBy  Challenge[]  @relation("ChallengeOpponent")
+  bugReports    BugReport[]
+  posts         Post[]
+  comments      Comment[]
+  notifications Notification[]
+  media         UserMedia[]
+  sessions      Session[]
+  accounts      Account[]
+}
+
+// OAuth Account
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([provider, providerAccountId])
+}
+
+// Session
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Problem Model
+model Problem {
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  description   String
+  difficulty    String   // Easy, Medium, Hard
+  
+  // Categorization
+  category      String   // Beginner, Intermediate, Advanced, Interview Prep
+  topic         String   // Java, DSA, Python, C, C++, Cloud, DevOps
+  subtopic      String?  // Loops, Arrays, Strings, Trees, Graphs, etc.
+  tags          String[] // Array of tags
+  
+  // Problem Content
+  examples      Json     // Array of { input, output, explanation }
+  constraints   String[]
+  hints         String[]
+  
+  // Test Cases
+  testCases     Json     // Array of { input, output, hidden: boolean }
+  
+  // Code Templates
+  templates     Json     // { python: "...", java: "...", cpp: "...", etc. }
+  
+  // Solution & Analysis
+  solution      String?
+  timeComplexity String?
+  spaceComplexity String?
+  
+  // Anti-cheat
+  minSolveTime  Int      @default(60) // seconds
+  
+  // Pro Content
+  isPro         Boolean  @default(false)
+  
+  // Stats
+  totalSubmissions Int   @default(0)
+  successRate   Float    @default(0.0)
+  avgTime       Int      @default(0)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  submissions   Submission[]
+  bugReports    BugReport[]
+}
+
+// Submission Model
+model Submission {
+  id            String   @id @default(cuid())
+  userId        String
+  problemId     String
+  
+  // Code
+  code          String
+  language      String   // python, java, cpp, c, javascript
+  
+  // Results
+  status        String   // Accepted, Wrong Answer, TLE, Runtime Error, etc.
+  passed        Boolean  @default(false)
+  testResults   Json     // Array of test case results
+  
+  // Execution
+  executionTime Int?     // milliseconds
+  memoryUsed    Int?     // MB
+  
+  // Scoring
+  attemptNumber Int
+  pointsEarned  Int      @default(0)
+  
+  // Anti-cheat
+  solveTime     Int      // seconds from opening to submission
+  tooFast       Boolean  @default(false)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  
+  // Relations
+  user          User     @relation(fields: [userId], references: [id])
+  problem       Problem  @relation(fields: [problemId], references: [id])
+}
+
+// Friendship Model
+model Friendship {
+  id          String   @id @default(cuid())
+  userId      String
+  friendId    String
+  status      String   // pending, accepted, blocked
+  createdAt   DateTime @default(now())
+  
+  user        User     @relation("UserFriendships", fields: [userId], references: [id])
+  friend      User     @relation("FriendOfUser", fields: [friendId], references: [id])
+  
+  @@unique([userId, friendId])
+}
+
+// Challenge Model - 1v1 battles
+model Challenge {
+  id            String   @id @default(cuid())
+  initiatorId   String
+  opponentId    String
+  
+  // Configuration
+  topic         String
+  difficulty    String
+  timeLimit     Int      // minutes
+  problemCount  Int
+  
+  // Status
+  status        String   // pending, accepted, in_progress, completed
+  winnerId      String?
+  
+  // Results
+  initiatorScore Int     @default(0)
+  opponentScore  Int     @default(0)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+  
+  // Relations
+  initiator     User     @relation("ChallengeInitiator", fields: [initiatorId], references: [id])
+  opponent      User     @relation("ChallengeOpponent", fields: [opponentId], references: [id])
+}
+
+// Bug Report Model
+model BugReport {
+  id            String   @id @default(cuid())
+  userId        String
+  problemId     String
+  
+  // Report Content
+  bugType       String
+  description   String
+  stepsToReproduce String?
+  code          String?
+  screenshots   String[] // URLs
+  
+  // Status
+  status        String   @default("submitted") // submitted, under_review, confirmed, in_progress, resolved, rejected
+  resolution    String?
+  pointsAwarded Int      @default(0)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  user          User     @relation(fields: [userId], references: [id])
+  problem       Problem  @relation(fields: [problemId], references: [id])
+}
+
+// Community Post Model
+model Post {
+  id            String   @id @default(cuid())
+  userId        String
+  title         String
+  content       String
+  category      String   // Problem Discussions, Study Groups, Interview Experiences, etc.
+  tags          String[]
+  
+  // Engagement
+  upvotes       Int      @default(0)
+  downvotes     Int      @default(0)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  user          User     @relation(fields: [userId], references: [id])
+  comments      Comment[]
+}
+
+// Comment Model
+model Comment {
+  id            String   @id @default(cuid())
+  userId        String
+  postId        String
+  parentId      String?  // For nested comments
+  content       String
+  
+  // Engagement
+  upvotes       Int      @default(0)
+  downvotes     Int      @default(0)
+  
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  user          User     @relation(fields: [userId], references: [id])
+  post          Post     @relation(fields: [postId], references: [id])
+  parent        Comment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies       Comment[] @relation("CommentReplies")
+}
+
+// Notification Model
+model Notification {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   // friend_request, bug_status, points_earned, media_unlocked, etc.
+  title         String
+  message       String
+  data          Json?    // Additional data
+  read          Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+// User Media (Avatars, Banners, Badges)
+model UserMedia {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String   // avatar, banner, badge
+  url           String
+  name          String
+  permanent     Boolean  @default(false)
+  expiresAt     DateTime?
+  equipped      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+// Season Model
+model Season {
+  id            Int      @id @default(autoincrement())
+  number        Int      @unique
+  startDate     DateTime
+  endDate       DateTime
+  active        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
+
+// Daily Puzzle Model
+model DailyPuzzle {
+  id            String   @id @default(cuid())
+  date          DateTime @unique
+  title         String
+  description   String
+  answer        String   // encrypted
+  hint          String?
+  bonusPoints   Int      @default(30)
+  createdAt     DateTime @default(now())
+}
