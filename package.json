@@ -10,7 +10,10 @@
     "lint": "next lint",
     "backend": "node backend/server.js",
     "dev:backend": "nodemon backend/server.js",
-    "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\""
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:backend\"",
+    "seed": "node backend/seeders/problems.js",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
   },
   "dependencies": {
     "next": "^14.0.0",
