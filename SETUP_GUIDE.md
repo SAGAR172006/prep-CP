@@ -1,336 +1,276 @@
-# Free Tech Stack Implementation Guide
+# Prep-CP - Gamified Coding Practice Platform
 
-This document provides a complete guide to setting up and using the **100% FREE** tech stack for the Prep CP platform.
+A modern, gamified coding practice platform built with Next.js 15, designed to help developers prepare for technical interviews through interactive problem-solving, AI assistance, and competitive programming features.
 
-## 🎯 Overview
+## 🚀 Features
 
-All services used in this project have generous free tiers that can support **1000+ users** with **zero monthly costs**. The stack is designed to scale, and you only pay when your revenue justifies the upgrade.
+### Core Features
+- **Problem Solving**: 1000+ coding problems across multiple difficulty levels
+- **Monaco Code Editor**: VS Code-powered editor with anti-cheat (paste disabled)
+- **AI Assistant**: GPT-4 powered chatbot for hints, debugging, and explanations
+- **Secure Code Execution**: Sandboxed environment using Piston API
+- **Gamification System**: Points, leagues (Bronze to Conqueror), and badges
+- **League System**: Competitive rankings with 6 tiers and sub-leagues
+- **Real-time Leaderboards**: Global, course-wise, and local rankings
 
----
+### Social Features
+- **Friends System**: Add friends and track their progress
+- **Challenge System**: 1v1 coding battles with friends
+- **Community Forum**: Discuss problems and share knowledge
+- **Matchmaking**: Competitive Programming mode with AI bots
 
-## 📋 Services Setup Guide
+### Premium Features (Pro)
+- Unlimited daily problems
+- 100 AI queries/day
+- Exclusive animated banners
+- Custom avatar upload
+- Ad-free experience
+- Priority matchmaking
 
-### 1. Supabase (Database + Auth + Storage + Realtime)
+## 🛠 Tech Stack
 
-**Free Tier:** 500MB database, 2GB bandwidth/month, unlimited API requests
+### Frontend
+- **Framework**: Next.js 15.2.9 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS + Framer Motion
+- **UI Components**: Radix UI + shadcn/ui
+- **Code Editor**: Monaco Editor (@monaco-editor/react)
+- **State Management**: Zustand
+- **Authentication**: NextAuth.js
 
-**Setup Steps:**
-1. Go to [supabase.com](https://supabase.com) and sign up
-2. Create a new project
-3. Note down:
-   - Project URL (NEXT_PUBLIC_SUPABASE_URL)
-   - Anon/Public Key (NEXT_PUBLIC_SUPABASE_ANON_KEY)
-   - Service Role Key (SUPABASE_SERVICE_ROLE_KEY)
-4. Run database migrations (see `DATABASE_SCHEMA.md`)
+### Backend
+- **Runtime**: Node.js 18+
+- **Database**: PostgreSQL (via Supabase)
+- **ORM**: Prisma
+- **Caching**: Redis (Upstash)
+- **Code Execution**: Piston API
+- **AI Integration**: OpenAI GPT-4 / Hugging Face
 
-**What it replaces:** PostgreSQL, Auth0, AWS S3, Pusher/Socket.io
+### Services
+- **Database**: Supabase (PostgreSQL)
+- **Redis**: Upstash
+- **Storage**: Cloudinary
+- **Payments**: Razorpay
+- **Real-time**: Socket.io
 
----
+## 📦 Installation
 
-### 2. Hugging Face (AI/LLM)
+### Prerequisites
+- Node.js >= 18.0.0
+- npm >= 9.0.0
+- PostgreSQL database (Supabase recommended)
+- Redis instance (Upstash recommended)
 
-**Free Tier:** 30,000 requests/month
+### Setup
 
-**Setup Steps:**
-1. Go to [huggingface.co](https://huggingface.co) and sign up
-2. Navigate to Settings → Access Tokens
-3. Create a new token with 'read' permissions
-4. Add to .env: `HUGGINGFACE_API_KEY=hf_...`
-
-**What it replaces:** OpenAI GPT-4, Claude
-
----
-
-### 3. Google Gemini (AI Fallback)
-
-**Free Tier:** Generous quota (60 requests/minute)
-
-**Setup Steps:**
-1. Go to [makersuite.google.com](https://makersuite.google.com/app/apikey)
-2. Create an API key
-3. Add to .env: `GOOGLE_GEMINI_API_KEY=...`
-
-**What it replaces:** OpenAI GPT-4, Claude
-
----
-
-### 4. Ollama (Local AI - Optional but Recommended)
-
-**Free:** Completely free, self-hosted
-
-**Setup Steps:**
+1. **Clone the repository**
 ```bash
-# Install Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Pull models
-ollama pull llama3
-ollama pull codellama
-ollama pull mistral
-
-# Run in background
-ollama serve
+git clone https://github.com/SAGAR172006/prep-CP.git
+cd prep-CP
 ```
 
-**Benefits:**
-- Unlimited requests
-- No API costs
-- Works offline
-- Faster response times
-
-**What it replaces:** OpenAI GPT-4, Claude
-
----
-
-### 5. Piston API (Code Execution)
-
-**Free:** Public API with rate limits, or self-host unlimited
-
-**Option A - Public API (Easiest):**
-```env
-PISTON_API_URL=https://emkc.org/api/v2/piston
-```
-
-**Option B - Self-Hosted (Recommended for Production):**
+2. **Install dependencies**
 ```bash
-git clone https://github.com/engineer-man/piston.git
-cd piston
-docker-compose up -d
+npm install
 ```
 
-Then set:
+3. **Set up environment variables**
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and fill in your configuration:
 ```env
-PISTON_API_URL=http://localhost:2000/api/v2/piston
+# Database (Supabase)
+DATABASE_URL="postgresql://..."
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# Redis (Upstash)
+UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token
+
+# NextAuth
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-here
+
+# OAuth (Optional)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+
+# AI (Choose one)
+OPENAI_API_KEY=your-openai-key
+# OR
+HUGGINGFACE_API_KEY=your-hf-key
+
+# Cloudinary (Optional)
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 ```
 
-**What it replaces:** Judge0, AWS Lambda, Custom Docker solutions
+4. **Set up database**
+```bash
+npx prisma generate
+npx prisma db push
+```
 
----
+5. **Run development server**
+```bash
+npm run dev
+```
 
-### 6. Upstash Redis (Caching)
+Open [http://localhost:3000](http://localhost:3000) to see the app!
 
-**Free Tier:** 10,000 commands/day
+## 🏗 Project Structure
 
-**Setup Steps:**
-1. Go to [upstash.com](https://upstash.com) and sign up
-2. Create a Redis database
-3. Note down:
-   - REST URL (UPSTASH_REDIS_REST_URL)
-   - REST Token (UPSTASH_REDIS_REST_TOKEN)
+```
+prep-CP/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── (auth)/            # Authentication pages
+│   │   │   ├── login/
+│   │   │   └── signup/
+│   │   ├── (main)/            # Main application pages
+│   │   │   ├── home/          # Home dashboard
+│   │   │   ├── problem/[id]/  # Problem solving page
+│   │   │   ├── profile/       # User profile
+│   │   │   ├── rankings/      # Leaderboards
+│   │   │   ├── community/     # Community forum
+│   │   │   └── pro/           # Pro subscription page
+│   │   ├── api/               # API routes
+│   │   │   ├── auth/          # Authentication endpoints
+│   │   │   ├── problems/      # Problem CRUD
+│   │   │   ├── code/          # Code execution & verification
+│   │   │   ├── chatbot/       # AI assistant
+│   │   │   ├── gamification/  # Points, leagues, rankings
+│   │   │   └── ...            # Other APIs
+│   │   ├── layout.tsx         # Root layout
+│   │   ├── page.tsx           # Home redirect
+│   │   └── globals.css        # Global styles
+│   ├── components/
+│   │   ├── ui/                # Reusable UI components
+│   │   ├── auth/              # Auth components
+│   │   ├── editor/            # Code editor
+│   │   ├── problem/           # Problem components
+│   │   └── shared/            # Shared components
+│   └── lib/
+│       ├── db/                # Database utilities
+│       │   ├── prisma.ts      # Prisma client
+│       │   ├── supabase.ts    # Supabase client
+│       │   └── redis.ts       # Redis client
+│       ├── ai/                # AI integration
+│       │   └── chatbot.ts     # Chatbot logic
+│       ├── code-execution/    # Code execution
+│       │   └── executor.ts    # Piston API wrapper
+│       └── utils/             # Utility functions
+│           └── helpers.ts     # Helper functions
+├── prisma/
+│   └── schema.prisma          # Database schema
+├── public/                    # Static assets
+├── .env.example               # Environment template
+├── package.json               # Dependencies
+├── tailwind.config.ts         # Tailwind configuration
+├── tsconfig.json              # TypeScript configuration
+└── next.config.js             # Next.js configuration
+```
 
-**What it replaces:** Redis Cloud, AWS ElastiCache
+## 🔐 Security Features
 
----
+- **Anti-Cheat System**: Paste disabled in code editor
+- **Time Validation**: Detect suspiciously fast submissions
+- **Code Similarity Detection**: Prevent plagiarism
+- **Rate Limiting**: Protect APIs from abuse
+- **JWT Authentication**: Secure user sessions
+- **Input Validation**: Zod schemas for all inputs
+- **Sandboxed Code Execution**: Isolated environments
 
-### 7. Cloudinary (File Storage)
+## 🎮 Usage
 
-**Free Tier:** 25GB storage, 25GB bandwidth/month
+### For Users
+1. **Sign Up**: Create account with email or OAuth (Google/GitHub)
+2. **Browse Problems**: Explore problems by difficulty and category
+3. **Solve Problems**: Write code in Monaco Editor
+4. **Get Help**: Use AI assistant for hints and debugging
+5. **Earn Points**: Solve problems to gain points and level up
+6. **Compete**: Challenge friends or join matchmaking
 
-**Setup Steps:**
-1. Go to [cloudinary.com](https://cloudinary.com) and sign up
-2. From dashboard, note:
-   - Cloud Name (NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME)
-   - API Key (CLOUDINARY_API_KEY)
-   - API Secret (CLOUDINARY_API_SECRET)
-3. Create upload preset named "prep-cp" (Settings → Upload)
-   - Set mode to "unsigned" for client-side uploads
-   - Add folder structure
+### For Developers
+1. Fork and clone the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make changes and commit: `git commit -m "Add feature"`
+4. Push to branch: `git push origin feature-name`
+5. Create Pull Request
 
-**What it replaces:** AWS S3, Imgur
+## 📚 API Documentation
 
----
+See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for complete API reference.
 
-### 8. Resend (Email Service)
+## 🧪 Testing
 
-**Free Tier:** 3,000 emails/month, 100 emails/day
+```bash
+# Run linting
+npm run lint
 
-**Setup Steps:**
-1. Go to [resend.com](https://resend.com) and sign up
-2. Add and verify your domain (or use their testing domain)
-3. Create API key
-4. Add to .env:
-   ```env
-   RESEND_API_KEY=re_...
-   RESEND_FROM_EMAIL=noreply@yourdomain.com
-   ```
+# Build for production
+npm run build
 
-**What it replaces:** SendGrid, Mailgun, AWS SES
+# Start production server
+npm start
+```
 
----
+## 🚀 Deployment
 
-### 9. Razorpay (Payment Processing)
-
-**Free:** No setup fees, only 2% transaction fees
-
-**Setup Steps:**
-1. Go to [razorpay.com](https://razorpay.com) and sign up
-2. Complete KYC verification
-3. Note down:
-   - Key ID (NEXT_PUBLIC_RAZORPAY_KEY_ID)
-   - Key Secret (RAZORPAY_KEY_SECRET)
-4. Enable payment methods in dashboard
-
-**Alternative for India:**
-- UPI Direct: Zero fees, instant settlement
-- Set up UPI QR code for manual payments
-
-**What it replaces:** Stripe, PayPal
-
----
-
-### 10. NextAuth.js (Authentication)
-
-**Free:** Completely free, open-source
-
-**Setup Steps:**
-1. Generate secret:
-   ```bash
-   openssl rand -base64 32
-   ```
-2. Add to .env:
-   ```env
-   NEXTAUTH_SECRET=your_generated_secret
-   NEXTAUTH_URL=http://localhost:3000
-   ```
-
-**Google OAuth:**
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create project → APIs & Services → Credentials
-3. Create OAuth 2.0 Client ID
-4. Add authorized redirect: `http://localhost:3000/api/auth/callback/google`
-5. Note Client ID and Secret
-
-**GitHub OAuth:**
-1. Go to [GitHub Settings → Developer Settings](https://github.com/settings/developers)
-2. New OAuth App
-3. Authorization callback: `http://localhost:3000/api/auth/callback/github`
-4. Note Client ID and Secret
-
----
-
-### 11. Sentry (Error Monitoring)
-
-**Free Tier:** 5,000 events/month
-
-**Setup Steps:**
-1. Go to [sentry.io](https://sentry.io) and sign up
-2. Create new project (Next.js)
-3. Note DSN
-4. Add to .env:
-   ```env
-   NEXT_PUBLIC_SENTRY_DSN=https://...@sentry.io/...
-   ```
-
----
-
-### 12. PostHog (Analytics)
-
-**Free Tier:** 1M events/month
-
-**Setup Steps:**
-1. Go to [posthog.com](https://posthog.com) and sign up
-2. Create project
-3. Note Project API Key
-4. Add to .env:
-   ```env
-   NEXT_PUBLIC_POSTHOG_KEY=phc_...
-   NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
-   ```
-
----
-
-### 13. Vercel (Hosting)
-
-**Free Tier:** Unlimited projects, 100GB bandwidth
-
-**Setup Steps:**
-1. Go to [vercel.com](https://vercel.com) and sign up
-2. Import GitHub repository
-3. Add environment variables
+### Vercel (Recommended)
+1. Push code to GitHub
+2. Import project in Vercel
+3. Set environment variables
 4. Deploy!
 
-**Auto-deploys on every push to main branch**
+### Docker
+```bash
+docker build -t prep-cp .
+docker run -p 3000:3000 prep-cp
+```
 
----
+## 🤝 Contributing
 
-### 14. Cloudflare (CDN + Security)
-
-**Free Tier:** Unlimited bandwidth, DDoS protection
-
-**Setup Steps:**
-1. Go to [cloudflare.com](https://cloudflare.com) and sign up
-2. Add your domain
-3. Update nameservers at your domain registrar
-4. Enable:
-   - Auto minify (JS, CSS, HTML)
-   - Brotli compression
-   - Always Use HTTPS
-   - Browser cache TTL
-
----
-
-## 💰 Cost Comparison
-
-### Free Tier Stack (0-1000 users)
-- **Total Monthly Cost: $0** ✅
-
-### When You Need to Scale (1000+ users)
-- Database: $10-20/month (Supabase Pro or Neon)
-- Redis: $0 (still within free tier)
-- Code Execution: $0 (Oracle Cloud free tier)
-- AI: $0 (still within free tier with caching)
-- Everything else: $0 (free tiers are generous)
-- **Total: ~$10-20/month**
-
-### Traditional Paid Stack
-- Vercel Pro: $20/month
-- Database: $25/month
-- Redis: $10/month
-- OpenAI API: $100-200/month
-- Code execution: $20/month
-- Email: $10/month
-- Monitoring: $20/month
-- **Total: $205-305/month**
-
-**Savings: $2,460-3,660/year!** 🎉
-
----
-
-## 🚀 Quick Start
-
-1. Clone the repository
-2. Copy `.env.example` to `.env`
-3. Fill in your API keys (follow setup guide above)
-4. Install dependencies:
-   ```bash
-   npm install
-   ```
-5. Run development server:
-   ```bash
-   npm run dev
-   ```
-6. Open [http://localhost:3000](http://localhost:3000)
-
----
-
-## 📚 Additional Resources
-
-- [Database Schema](/docs/DATABASE_SCHEMA.md)
-- [API Documentation](/docs/API_DOCS.md)
-- [Deployment Guide](/docs/DEPLOYMENT.md)
-- [Scaling Guide](/docs/SCALING.md)
-
----
-
-## 🆘 Support
-
-If you encounter issues:
-1. Check the [Troubleshooting Guide](/docs/TROUBLESHOOTING.md)
-2. Open an issue on GitHub
-3. Join our Discord community
-
----
+Contributions are welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Follow code style (ESLint + Prettier)
+4. Write meaningful commit messages
+5. Submit Pull Request
 
 ## 📝 License
 
-MIT License - Use it freely!
+This project is licensed under the MIT License - see LICENSE file for details.
+
+## 👥 Authors
+
+- SAGAR172006
+
+## 🙏 Acknowledgments
+
+- Next.js team for the amazing framework
+- Radix UI for accessible components
+- Piston API for code execution
+- OpenAI for GPT-4
+- All contributors and users!
+
+## 📧 Support
+
+For support, email support@prep-cp.com or open an issue on GitHub.
+
+## 🔗 Links
+
+- [Documentation](https://docs.prep-cp.com)
+- [API Reference](./API_DOCUMENTATION.md)
+- [Discord Community](https://discord.gg/prep-cp)
+- [Twitter](https://twitter.com/prepcp)
+
+---
+
+Made with ❤️ by the Prep-CP team

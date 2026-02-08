@@ -1,0 +1,474 @@
+// This is your Prisma schema file
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String          @id @default(cuid())
+  email             String          @unique
+  username          String          @unique
+  password          String?
+  name              String?
+  avatar            String?
+  banner            String?
+  bio               String?
+  location          String?
+  
+  // OAuth
+  oauthProvider     String?
+  oauthId           String?
+  
+  // Gamification
+  points            Int             @default(0)
+  localLeague       String          @default("Bronze")
+  localSubLeague    String          @default("V")
+  cpLeague          String          @default("Bronze")
+  cpSubLeague       String          @default("V")
+  
+  // Streaks
+  loginStreak       Int             @default(0)
+  solveStreak       Int             @default(0)
+  lastLoginDate     DateTime?
+  lastSolveDate     DateTime?
+  
+  // Stats
+  problemsSolved    Int             @default(0)
+  totalTimeSpent    Int             @default(0) // in seconds
+  accuracy          Float           @default(0)
+  
+  // Pro
+  isPro             Boolean         @default(false)
+  proExpiresAt      DateTime?
+  proSubscriptionId String?
+  
+  // Limits
+  dailyProblemLimit Int             @default(20)
+  dailyBotQueries   Int             @default(20)
+  friendLimit       Int             @default(20)
+  
+  // Preferences
+  preferredLanguage String          @default("javascript")
+  theme             String          @default("dark")
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  // Relations
+  submissions       Submission[]
+  friends           Friendship[]    @relation("UserFriends")
+  friendOf          Friendship[]    @relation("FriendOfUser")
+  sentChallenges    Challenge[]     @relation("ChallengeSender")
+  receivedChallenges Challenge[]    @relation("ChallengeReceiver")
+  bugs              Bug[]
+  notifications     Notification[]
+  posts             Post[]
+  comments          Comment[]
+  media             UserMedia[]
+  badges            UserBadge[]
+  
+  @@index([points])
+  @@index([email])
+  @@index([username])
+}
+
+model Problem {
+  id                String          @id @default(cuid())
+  title             String
+  slug              String          @unique
+  description       String
+  difficulty        String          // Easy, Medium, Hard
+  category          String          // DSA, Java, Python, etc.
+  topic             String          // Arrays, Strings, Trees, etc.
+  subtopic          String?
+  
+  // Problem Content
+  constraints       String[]
+  examples          Json[]          // Array of {input, output, explanation}
+  hints             String[]
+  
+  // Code Templates
+  codeTemplates     Json            // {python: "", java: "", cpp: "", etc.}
+  
+  // Test Cases
+  testCases         Json[]          // Array of {input, expectedOutput, isHidden}
+  
+  // Metadata
+  tags              String[]
+  companies         String[]
+  
+  // Difficulty Metrics
+  minSolveTime      Int             @default(60) // in seconds
+  avgSolveTime      Int?
+  successRate       Float?
+  
+  // Stats
+  attempts          Int             @default(0)
+  solvedCount       Int             @default(0)
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  // Relations
+  submissions       Submission[]
+  bugs              Bug[]
+  
+  @@index([difficulty])
+  @@index([category])
+  @@index([topic])
+  @@index([slug])
+}
+
+model Submission {
+  id                String          @id @default(cuid())
+  userId            String
+  problemId         String
+  
+  code              String
+  language          String
+  
+  // Results
+  status            String          // Accepted, Wrong Answer, Runtime Error, Time Limit Exceeded
+  passed            Boolean         @default(false)
+  testsPassed       Int             @default(0)
+  testsTotal        Int             @default(0)
+  
+  // Metrics
+  executionTime     Int?            // in milliseconds
+  memoryUsed        Int?            // in KB
+  timeSpent         Int             // in seconds (from opening problem to submission)
+  attemptNumber     Int             @default(1)
+  
+  // Scoring
+  pointsEarned      Int             @default(0)
+  
+  // Anti-Cheat
+  isFlaggedFast     Boolean         @default(false)
+  similarityScore   Float?
+  
+  submittedAt       DateTime        @default(now())
+  
+  // Relations
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem           Problem         @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([problemId])
+  @@index([status])
+  @@index([submittedAt])
+}
+
+model Friendship {
+  id                String          @id @default(cuid())
+  userId            String
+  friendId          String
+  status            String          // pending, accepted, blocked
+  
+  createdAt         DateTime        @default(now())
+  acceptedAt        DateTime?
+  
+  // Relations
+  user              User            @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend            User            @relation("FriendOfUser", fields: [friendId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+  @@index([status])
+}
+
+model Challenge {
+  id                String          @id @default(cuid())
+  senderId          String
+  receiverId        String
+  
+  // Configuration
+  topic             String
+  difficulty        String
+  timeLimit         Int             // in minutes
+  problemCount      Int
+  problems          String[]        // Array of problem IDs
+  
+  // Status
+  status            String          // pending, accepted, declined, in_progress, completed, cancelled
+  
+  // Results
+  senderScore       Int?
+  receiverScore     Int?
+  winnerId          String?
+  
+  createdAt         DateTime        @default(now())
+  startedAt         DateTime?
+  completedAt       DateTime?
+  expiresAt         DateTime
+  
+  // Relations
+  sender            User            @relation("ChallengeSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver          User            @relation("ChallengeReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+model Bug {
+  id                String          @id @default(cuid())
+  userId            String
+  problemId         String?
+  
+  // Bug Details
+  type              String          // Incorrect Test Case, Wrong Expected Output, UI Issue, etc.
+  title             String
+  description       String
+  stepsToReproduce  String?
+  code              String?
+  screenshots       String[]
+  
+  // Status
+  status            String          @default("submitted") // submitted, under_review, confirmed, in_progress, resolved, rejected
+  
+  // Resolution
+  resolutionNotes   String?
+  pointsAwarded     Int             @default(0)
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  resolvedAt        DateTime?
+  
+  // Relations
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem           Problem?        @relation(fields: [problemId], references: [id])
+  
+  @@index([userId])
+  @@index([problemId])
+  @@index([status])
+}
+
+model Notification {
+  id                String          @id @default(cuid())
+  userId            String
+  
+  type              String          // friend_request, bug_update, points_awarded, etc.
+  title             String
+  message           String
+  actionUrl         String?
+  metadata          Json?
+  
+  read              Boolean         @default(false)
+  
+  createdAt         DateTime        @default(now())
+  
+  // Relations
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+model Season {
+  id                String          @id @default(cuid())
+  seasonNumber      Int             @unique
+  startDate         DateTime
+  endDate           DateTime
+  isActive          Boolean         @default(false)
+  
+  createdAt         DateTime        @default(now())
+  
+  @@index([isActive])
+  @@index([seasonNumber])
+}
+
+model Media {
+  id                String          @id @default(cuid())
+  type              String          // banner, avatar, badge
+  name              String
+  url               String
+  thumbnailUrl      String?
+  
+  // Availability
+  isPro             Boolean         @default(false)
+  isSeasonal        Boolean         @default(false)
+  seasonId          String?
+  
+  // Animation
+  isAnimated        Boolean         @default(false)
+  animationData     Json?
+  
+  createdAt         DateTime        @default(now())
+  
+  // Relations
+  users             UserMedia[]
+  
+  @@index([type])
+  @@index([isPro])
+}
+
+model UserMedia {
+  id                String          @id @default(cuid())
+  userId            String
+  mediaId           String
+  
+  isEquipped        Boolean         @default(false)
+  isExpired         Boolean         @default(false)
+  expiresAt         DateTime?
+  
+  obtainedAt        DateTime        @default(now())
+  
+  // Relations
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media             Media           @relation(fields: [mediaId], references: [id])
+  
+  @@unique([userId, mediaId])
+  @@index([userId])
+  @@index([mediaId])
+  @@index([isExpired])
+}
+
+model Badge {
+  id                String          @id @default(cuid())
+  name              String          @unique
+  description       String
+  iconUrl           String
+  
+  // Requirements
+  category          String          // streak, achievement, ranking, seasonal
+  requirement       Json            // Criteria for earning badge
+  
+  createdAt         DateTime        @default(now())
+  
+  // Relations
+  users             UserBadge[]
+  
+  @@index([category])
+}
+
+model UserBadge {
+  id                String          @id @default(cuid())
+  userId            String
+  badgeId           String
+  
+  seasonId          String?
+  
+  earnedAt          DateTime        @default(now())
+  
+  // Relations
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge             Badge           @relation(fields: [badgeId], references: [id])
+  
+  @@unique([userId, badgeId, seasonId])
+  @@index([userId])
+  @@index([badgeId])
+}
+
+model Post {
+  id                String          @id @default(cuid())
+  userId            String
+  
+  title             String
+  content           String
+  category          String          // Problem Discussions, Study Groups, etc.
+  tags              String[]
+  
+  upvotes           Int             @default(0)
+  downvotes         Int             @default(0)
+  
+  isDeleted         Boolean         @default(false)
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  // Relations
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments          Comment[]
+  
+  @@index([userId])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model Comment {
+  id                String          @id @default(cuid())
+  userId            String
+  postId            String
+  parentId          String?         // for nested replies
+  
+  content           String
+  
+  upvotes           Int             @default(0)
+  downvotes         Int             @default(0)
+  
+  isDeleted         Boolean         @default(false)
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  // Relations
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post              Post            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent            Comment?        @relation("CommentReplies", fields: [parentId], references: [id])
+  replies           Comment[]       @relation("CommentReplies")
+  
+  @@index([userId])
+  @@index([postId])
+  @@index([parentId])
+  @@index([createdAt])
+}
+
+model DailyPuzzle {
+  id                String          @id @default(cuid())
+  date              DateTime        @unique
+  
+  title             String
+  description       String
+  type              String          // riddle, pattern, algorithm, etc.
+  difficulty        String
+  
+  answer            String
+  hints             String[]
+  
+  // Stats
+  solvers           Int             @default(0)
+  avgSolveTime      Int?
+  
+  createdAt         DateTime        @default(now())
+  
+  @@index([date])
+}
+
+model Matchmaking {
+  id                String          @id @default(cuid())
+  userId            String
+  league            String
+  points            Int
+  
+  status            String          @default("searching") // searching, matched, cancelled
+  
+  matchedUserId     String?
+  isBot             Boolean         @default(false)
+  
+  createdAt         DateTime        @default(now())
+  matchedAt         DateTime?
+  
+  @@index([userId])
+  @@index([status])
+  @@index([league])
+}
+
+model Analytics {
+  id                String          @id @default(cuid())
+  userId            String?
+  
+  eventType         String
+  eventData         Json
+  
+  timestamp         DateTime        @default(now())
+  
+  @@index([eventType])
+  @@index([timestamp])
+  @@index([userId])
+}
