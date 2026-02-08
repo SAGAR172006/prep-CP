@@ -1,0 +1,266 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?   // For email/password auth
+  image         String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // OAuth providers
+  accounts      Account[]
+  sessions      Session[]
+
+  // Gamification
+  points        Int       @default(0)
+  league        String    @default("Bronze")
+  subLeague     String    @default("V")
+  seasonPoints  Int       @default(0)
+  
+  // Streaks
+  loginStreak   Int       @default(0)
+  solveStreak   Int       @default(0)
+  lastLoginDate DateTime?
+  lastSolveDate DateTime?
+  
+  // Limits and Pro
+  isPro         Boolean   @default(false)
+  proExpiresAt  DateTime?
+  dailyProblems Int       @default(0)
+  dailyAIQueries Int      @default(0)
+  lastDailyReset DateTime?
+  
+  // Social
+  friendLimit   Int       @default(20)
+  friends       Friend[]  @relation("UserFriends")
+  friendOf      Friend[]  @relation("FriendUser")
+  
+  // History
+  submissions   Submission[]
+  bugReports    BugReport[]
+  forumPosts    ForumPost[]
+  forumComments ForumComment[]
+  
+  // Collections
+  banners       String[]
+  avatars       String[]
+  badges        String[]
+  
+  @@index([email])
+  @@index([league, seasonPoints])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Friend {
+  id        String   @id @default(cuid())
+  userId    String
+  friendId  String
+  status    String   @default("pending") // pending, accepted, rejected
+  createdAt DateTime @default(now())
+  
+  user      User     @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend    User     @relation("FriendUser", fields: [friendId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+}
+
+model Problem {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String   @db.Text
+  difficulty  String   // Easy, Medium, Hard
+  topic       String   // Java, DSA, Python, etc.
+  category    String   // Beginner, Intermediate, Advanced, Pro
+  points      Int      @default(10)
+  
+  // Code templates
+  templatePython     String? @db.Text
+  templateJava       String? @db.Text
+  templateCpp        String? @db.Text
+  templateC          String? @db.Text
+  templateJavascript String? @db.Text
+  templateGo         String? @db.Text
+  
+  // Test cases
+  testCases   TestCase[]
+  
+  // Anti-cheat
+  minSolveTime Int @default(60) // seconds
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  submissions Submission[]
+  
+  @@index([difficulty])
+  @@index([topic])
+  @@index([category])
+}
+
+model TestCase {
+  id        String  @id @default(cuid())
+  problemId String
+  input     String  @db.Text
+  output    String  @db.Text
+  isHidden  Boolean @default(false)
+  
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  
+  @@index([problemId])
+}
+
+model Submission {
+  id         String   @id @default(cuid())
+  userId     String
+  problemId  String
+  code       String   @db.Text
+  language   String
+  status     String   // Accepted, Wrong Answer, Runtime Error, Time Limit Exceeded
+  points     Int      @default(0)
+  attempts   Int      @default(1)
+  timeTaken  Int      // seconds
+  memory     Int?     // KB
+  
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem    Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([problemId])
+  @@index([userId, problemId])
+}
+
+model BugReport {
+  id          String   @id @default(cuid())
+  userId      String
+  problemId   String?
+  title       String
+  description String   @db.Text
+  type        String   // Problem Error, UI Bug, Security Issue, etc.
+  status      String   @default("Submitted") // Submitted, Under Review, Confirmed, In Progress, Resolved, Rejected
+  priority    String   @default("Medium")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([status])
+}
+
+model ForumPost {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  content     String   @db.Text
+  category    String   // Problem Discussions, Study Groups, etc.
+  upvotes     Int      @default(0)
+  downvotes   Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments    ForumComment[]
+  
+  @@index([userId])
+  @@index([category])
+}
+
+model ForumComment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  content   String   @db.Text
+  upvotes   Int      @default(0)
+  downvotes Int      @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([postId])
+  @@index([userId])
+}
+
+model Season {
+  id        String   @id @default(cuid())
+  number    Int      @unique
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([isActive])
+}
+
+model DailyPuzzle {
+  id          String   @id @default(cuid())
+  date        DateTime @unique
+  title       String
+  description String   @db.Text
+  solution    String   @db.Text
+  points      Int      @default(30)
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([date])
+}
