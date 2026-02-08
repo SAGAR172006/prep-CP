@@ -43,7 +43,7 @@ A **Pull Request (PR)** is like a "proposal" to add new code/files to your repos
 Now that the PR is merged, get the files in your Codespace:
 
 1. **Open your Codespace** (the one you're currently in)
-2. **Open the terminal** (bottom panel or press `` Ctrl + ` ``)
+2. **Open the terminal** (bottom panel or press `Ctrl + backtick`)
 3. Run this command:
    ```bash
    git pull origin main
